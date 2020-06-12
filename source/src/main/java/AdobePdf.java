@@ -13,7 +13,9 @@ import org.apache.pdfbox.text.PDFTextStripperByArea;
 
 import javax.imageio.ImageIO;
 import java.awt.geom.Rectangle2D;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -28,47 +30,67 @@ public class AdobePdf
 {
     private static final String FILE_NAME = "test2.pdf";
 
-    public static void main(String[] args)
+    public static void main(String[] args) throws IOException
     {
+
+//        projenin adresini veren kod: new File("").getAbsolutePath()
+//        ya da
+//        FileSystems.getDefault().getPath("").toAbsolutePath().toString()
+
+
+
         System.out.println("########################## Read Text From Pdf File ##########################");
         readTextFromPdf();
-        System.out.println("\n########################## Read Urls From Pdf File ##########################");
-        readAnnotationsFromPdf();
-        System.out.println("\n########################## Save Images From Pdf File ##########################");
-        readImagesFromPdf();
-        System.out.println("\n########################## Read Hyperlinked Words From Pdf File ##########################");
-        readHyperlinkedWordsFromPdf();
+//        System.out.println("\n########################## Read Urls From Pdf File ##########################");
+//        readAnnotationsFromPdf();
+//        System.out.println("\n########################## Save Images From Pdf File ##########################");
+//        readImagesFromPdf();
+//        System.out.println("\n########################## Read Hyperlinked Words From Pdf File ##########################");
+//        readHyperlinkedWordsFromPdf();
     }
 
-    private static void readTextFromPdf()
+    private static void readTextFromPdf() throws IOException
     {
         ClassLoader classLoader = new AdobePdf().getClass().getClassLoader();
         PDFTextStripper tStripper = null;
-        try
-        {
-            PDDocument document = PDDocument.load(new File(classLoader.getResource(FILE_NAME).getFile()));
+        String dirPdf = "C:\\pdf\\";
+        String dirTxt = "C:\\pdf\\txt\\";
 
-            tStripper = new PDFTextStripper();
-            tStripper.setStartPage(1);
-            tStripper.setEndPage(document.getNumberOfPages());
-//            System.out.println(document.getClass());
-            String content = "";
-            if (!document.isEncrypted())
-            {
-                String pdfFileInText = tStripper.getText(document);
-                String[] lines = pdfFileInText.split("\\r\\n\\r\\n");
-                for (String line : lines)
-                {
-                    content += line;
-                }
-            }
-            document.close();
-            System.out.println(content.trim());
-        }
-        catch (IOException e)
+        for (int i = 1; i < 9985; i++)
         {
-            e.printStackTrace();
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(dirTxt + i + ".txt"));
+            String content = "";
+
+            try
+            {
+
+                PDDocument document = PDDocument.load(new File(dirPdf + i + ".pdf"));
+
+                tStripper = new PDFTextStripper();
+                tStripper.setStartPage(1);
+                tStripper.setEndPage(document.getNumberOfPages());
+//            System.out.println(document.getClass());
+                if (!document.isEncrypted())
+                {
+                    String pdfFileInText = tStripper.getText(document);
+                    String[] lines = pdfFileInText.split("\\r\\n\\r\\n");
+                    for (String line : lines)
+                    {
+                        content += line;
+                    }
+                }
+                document.close();
+                writer.write(content.trim());
+
+            }
+            catch (IOException e)
+            {
+                content = "";
+            }
+            writer.close();
         }
+
     }
 
     private static void readAnnotationsFromPdf()
