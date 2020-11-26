@@ -24,7 +24,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * User: dengin
@@ -33,15 +38,201 @@ import java.util.Locale;
  */
 public class XmlParser
 {
-    private static String FILE_DIR = "C:\\";
+    private static String FILE_DIR = "C:\\Users\\XXX\\tez_calismasi\\";
+
+    static List<String> stopWords = Arrays.asList(new String[]{"acaba", "ama", "aslında", "az", "bazı", "belki", "biri", "birkaç", "birşey",
+            "biz", "bu", "çok", "çünkü", "da", "daha", "de", "defa", "diye", "eğer", "en", "gibi", "hem", "hep", "hepsi",
+            "her", "hiç", "için", "ile", "ise", "kez", "ki", "kim", "mı", "mu", "mü", "nasıl", "ne", "neden", "nerde",
+            "nerede", "nereye", "niçin", "niye", "o", "sanki", "şey", "siz", "şu", "tüm", "ve", "veya", "ya", "yani",
+            "<COMMA>", "<PERIOD>", "<SEMICOLON>", "<COLON>", "<QUOTATION_MARK>", "<EXCLAMATION_MARK>", "<QUESTION_MARK>",
+            "<LEFT_PAREN>", "<RIGHT_PAREN>", "<HYPHENS>", "<NEW_LINE>"});
 
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException, JAXBException
     {
+        File xmlFile = new File("D:\\dergipark.txt");
+        Source xmlSource = getXmlSource(xmlFile);
+        JAXBContext jaxbContext = JAXBContext.newInstance(Makaleler.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        Makaleler makaleler = (Makaleler) jaxbUnmarshaller.unmarshal(xmlSource);
+
+        int max = 0;
+        int len = 0;
+        Set<String> kelimeunique = new HashSet();
+        int toplam = 0;
+        for (Makale sobiadMakale : makaleler.getMakale())
+        {
+            len = 0;
+            if (sobiadMakale.getKonular() != null)
+            {
+                List a = onisle(sobiadMakale.getKonular());
+                kelimeunique.addAll(a);
+                len += a.size();
+            }
+            if (sobiadMakale.getOzetbilgisi() != null)
+            {
+                List a = onisle(sobiadMakale.getOzetbilgisi());
+                kelimeunique.addAll(a);
+                len += a.size();
+            }
+            if (sobiadMakale.getPdf()!= null)
+            {
+                List a = onisle(sobiadMakale.getPdf());
+                kelimeunique.addAll(a);
+                len += a.size();
+            }
+            if (sobiadMakale.getBolum()!= null)
+            {
+                List a = onisle(sobiadMakale.getBolum());
+                kelimeunique.addAll(a);
+                len += a.size();
+            }
+            if (sobiadMakale.getBaslik()!= null)
+            {
+                List a = onisle(sobiadMakale.getBaslik());
+                kelimeunique.addAll(a);
+                len += a.size();
+            }
+            if (sobiadMakale.getAnahtarbilgileri() != null)
+            {
+                for (AnahtarBilgileri sobiadAnahtarBilgileri : sobiadMakale.getAnahtarbilgileri())
+                {
+                    List a = onisle(sobiadAnahtarBilgileri.getAnahtar());
+                    kelimeunique.addAll(a);
+                    len += a.size();
+                }
+            }
+            if (sobiadMakale.getKaynakbilgileri() != null)
+            {
+                for (KaynakBilgileri sobiadAnahtarBilgileri : sobiadMakale.getKaynakbilgileri())
+                {
+                    List a = onisle(sobiadAnahtarBilgileri.getKaynak());
+                    kelimeunique.addAll(a);
+                    len += a.size();
+                }
+            }
+            toplam += len;
+            if (len > max)
+            {
+                max = len;
+            }
+        }
+
+        System.out.println("Dergipark: ");
+        System.out.println("Toplam kelime sayısı: " + toplam);
+        System.out.println("Toplam unique kelime sayısı: " + kelimeunique.size());
+        System.out.println("En büyük makale uzunluğu: " + max);
+
+
+        xmlFile = new File("D:\\sobiad.txt");
+        xmlSource = getXmlSource(xmlFile);
+        jaxbContext = JAXBContext.newInstance(SobiadMakaleler.class);
+        jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        SobiadMakaleler sobiadMakaleler = (SobiadMakaleler) jaxbUnmarshaller.unmarshal(xmlSource);
+
+        max = 0;
+        len = 0;
+        kelimeunique = new HashSet();
+        toplam = 0;
+        for (SobiadMakale sobiadMakale : sobiadMakaleler.getMakale())
+        {
+            len = 0;
+            if (sobiadMakale.getPdf() != null)
+            {
+                List a = onisle(sobiadMakale.getPdf());
+                kelimeunique.addAll(a);
+                len += a.size();
+            }
+            if (sobiadMakale.getBaslik() != null)
+            {
+                List a = onisle(sobiadMakale.getBaslik());
+                kelimeunique.addAll(a);
+                len += a.size();
+            }
+            if (sobiadMakale.getOzet()!= null)
+            {
+                List a = onisle(sobiadMakale.getOzet());
+                kelimeunique.addAll(a);
+                len += a.size();
+            }
+            if (sobiadMakale.getAnahtarbilgileri() != null)
+            {
+                for (SobiadAnahtarBilgileri sobiadAnahtarBilgileri : sobiadMakale.getAnahtarbilgileri())
+                {
+                    List a = onisle(sobiadAnahtarBilgileri.getAnahtar());
+                    kelimeunique.addAll(a);
+                    len += a.size();
+                }
+            }
+            toplam += len;
+            if (len > max)
+            {
+                max = len;
+            }
+        }
+
+        System.out.println("Sobiad: ");
+        System.out.println("Toplam kelime sayısı: " + toplam);
+        System.out.println("Toplam unique kelime sayısı: " + kelimeunique.size());
+        System.out.println("En büyük makale uzunluğu: " + max);
+
+
+
+//
+////        List<Integer> dergiparkList = new ArrayList(Arrays.asList(691,4990,1990,8524,7774,2474,5428,4021,3649,2840,6223,1477,7293,3016,1335,7417,318,1695,3840,296,285,8772,3526,3417,8062,3251,9346));
+//        List<Integer> sobiadList = new ArrayList(Arrays.asList(2496,5597,7721,4353,13585,1058,1212,37846,22924,5583,437,5204,6774,33439,44231,7003,41185,2260,1969,3947,7775,48555,7701,41982,46762,38230,35653,15086,25113,1937,50510,3446,33549,42457,51730));
+//
+//        try
+//        {
+//            BufferedWriter writer = new BufferedWriter(new FileWriter("D:\\sonuclar_sobiad.txt"));
+//
+//            for (SobiadMakale makale : makaleler.getMakale())
+//            {
+//                if (sobiadList.contains(makale.getSira()))
+//                {
+//                    String content = makale.getSira().toString() + ": ";
+//                    if (makale.getBaslik() != null)
+//                    {
+//                        content += "baslik: " + metinEkle(makale.getBaslik() + "\n");
+//                    }
+//                    if (makale.getOzet() != null)
+//                    {
+//                        content += "#ozet: " + metinEkle(makale.getOzet()+ "\n");
+//                    }
+//                    if (makale.getAnahtarbilgileri() != null)
+//                    {
+//                        content += "#anahtar kelimeler: ";
+//                        for (SobiadAnahtarBilgileri anahtarBilgileri : makale.getAnahtarbilgileri())
+//                        {
+//                            content += " " + metinEkle(anahtarBilgileri.getAnahtar()+ "\n");
+//                        }
+//                    }
+//                    if (!content.isEmpty())
+//                    {
+//                        writer.write(content.trim() + "\n\n");
+//                    }
+//                }
+//            }
+//            writer.close();
+//        }
+//        catch (IOException e)
+//        {
+//            e.printStackTrace();
+//        }
+//
+//
+
+
+
+
+
 //        dergiparkSozlukOlustur();
 //        sobiadSozlukOlustur();
 
-        dergiparkMakaleIcerikOlustur();
-        sobiadMakaleIcerikOlustur();
+//        dergiparkMakaleOzetOlustur();
+//        sobiadMakaleOzetOlustur();
+
+//        dergiparkMakaleIcerikOlustur();
+//        sobiadMakaleIcerikOlustur();
 
 //        JAXBContext context = JAXBContext.newInstance(Makaleler.class);
 //        Unmarshaller un = context.createUnmarshaller();
@@ -90,6 +281,32 @@ public class XmlParser
 //        }
     }
 
+    private static List<String> onisle(String temp)
+    {
+        String[] temps = temp.toLowerCase(new Locale("tr-TR")).split(" ");
+        List<String> temp2 = new ArrayList<>();
+
+        for (int i = 0; i < temps.length; i++)
+        {
+            String s = temps[i];
+            if (s.length() > 1 && !stopWords.contains(s)
+                    && !s.startsWith("0")
+                    && !s.startsWith("1")
+                    && !s.startsWith("2")
+                    && !s.startsWith("3")
+                    && !s.startsWith("4")
+                    && !s.startsWith("5")
+                    && !s.startsWith("6")
+                    && !s.startsWith("7")
+                    && !s.startsWith("8")
+                    && !s.startsWith("9"))
+            {
+                temp2.add(s);
+            }
+        }
+        return temp2;
+    }
+
     private static void dergiparkSozlukOlustur() throws ParserConfigurationException, IOException, SAXException, JAXBException
     {
         dergiparkSozlukOlustur(getDergiparkMakaleler());
@@ -127,7 +344,7 @@ public class XmlParser
 
             for (Makale makale : makaleler.getMakale())
             {
-                if (makale.getSira() % 1000 < 3)
+                if (makale.getSira() % 1000 < 2)
                 {
                     System.out.println(makale.getSira());
                 }
@@ -182,7 +399,7 @@ public class XmlParser
 
     private static String metinEkle(String text)
     {
-        String temizMetin = text.replaceAll("[^a-zA-Z ıiüğşöçÜİĞŞÇÖ,.;:\"!?()\\-]", "");
+        String temizMetin = text.replaceAll("[^a-zA-Z ıiüğşöçÜİĞŞÇÖ,.;:\"!?()\\-\n]", "");
         temizMetin = temizMetin.toLowerCase(Locale.forLanguageTag("tr"));
         temizMetin = temizMetin.replace("  ", " ");
         temizMetin = temizMetin.replace("   ", " ");
@@ -203,17 +420,17 @@ public class XmlParser
         temizMetin = temizMetin.replace("                  ", " ");
         temizMetin = temizMetin.replace("                   ", " ");
         temizMetin = temizMetin.replace("                    ", " ");
-        temizMetin = temizMetin.replace(",", " <COMMA> ");
-        temizMetin = temizMetin.replace(".", " <PERIOD> ");
-        temizMetin = temizMetin.replace(";", " <SEMICOLON> ");
-        temizMetin = temizMetin.replace(":", " <COLON> ");
-        temizMetin = temizMetin.replace("\"", " <QUOTATION_MARK> ");
-        temizMetin = temizMetin.replace("!", " <EXCLAMATION_MARK> ");
-        temizMetin = temizMetin.replace("?", " <QUESTION_MARK> ");
-        temizMetin = temizMetin.replace("(", " <LEFT_PAREN> ");
-        temizMetin = temizMetin.replace(")", " <RIGHT_PAREN> ");
-        temizMetin = temizMetin.replace("-", " <HYPHENS> ");
-        temizMetin = temizMetin.replace("\n", " <NEW_LINE> ");
+//        temizMetin = temizMetin.replace(",", " <COMMA> ");
+//        temizMetin = temizMetin.replace(".", " <PERIOD> ");
+//        temizMetin = temizMetin.replace(";", " <SEMICOLON> ");
+//        temizMetin = temizMetin.replace(":", " <COLON> ");
+//        temizMetin = temizMetin.replace("\"", " <QUOTATION_MARK> ");
+//        temizMetin = temizMetin.replace("!", " <EXCLAMATION_MARK> ");
+//        temizMetin = temizMetin.replace("?", " <QUESTION_MARK> ");
+//        temizMetin = temizMetin.replace("(", " <LEFT_PAREN> ");
+//        temizMetin = temizMetin.replace(")", " <RIGHT_PAREN> ");
+//        temizMetin = temizMetin.replace("-", " <HYPHENS> ");
+//        temizMetin = temizMetin.replace("\n", " <NEW_LINE> ");
         return temizMetin;
     }
 
@@ -270,6 +487,86 @@ public class XmlParser
             }
             writer.close();
 
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private static void dergiparkMakaleOzetOlustur() throws FileNotFoundException, JAXBException, ParserConfigurationException, SAXException, UnsupportedEncodingException
+    {
+        ozetOlusturDergipark(getDergiparkMakaleler());
+    }
+
+    private static void ozetOlusturDergipark(Makaleler makaleler)
+    {
+        String adres = FILE_DIR + "ozet_dergipark.csv";
+
+        try
+        {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(adres));
+            String content = "sira;makale_no;ozet\n";
+            writer.write(content);
+            int i = 1;
+            for (Makale makale : makaleler.getMakale())
+            {
+                content = "";
+                if (makale.getSira() % 1000 < 2)
+                {
+                    System.out.println(makale.getSira());
+                }
+                if (makale.getOzetbilgisi() != null)
+                {
+                    content += metinEkle(makale.getOzetbilgisi()) + " ";
+                }
+                if (!content.isEmpty() && !content.trim().equals(""))
+                {
+                    content = i++ + ";" + makale.getSira() + ";" + content.trim() + "\n";
+                    writer.write(content);
+                }
+            }
+            writer.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private static void sobiadMakaleOzetOlustur() throws FileNotFoundException, JAXBException, ParserConfigurationException, SAXException, UnsupportedEncodingException
+    {
+        ozetOlusturSobiad(getSobiadMakaleler());
+    }
+
+    private static void ozetOlusturSobiad(SobiadMakaleler makaleler)
+    {
+        String adres = FILE_DIR + "ozet_sobiad.csv";
+
+        try
+        {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(adres));
+            String content = "sira;makale_no;ozet\n";
+            writer.write(content);
+            int i = 1;
+            for (SobiadMakale makale : makaleler.getMakale())
+            {
+                content = "";
+                if (makale.getSira() % 1000 < 2)
+                {
+                    System.out.println(makale.getSira());
+                }
+                if (makale.getOzet() != null)
+                {
+                    content += metinEkle(makale.getOzet()) + " ";
+                }
+                if (!content.isEmpty() && !content.trim().equals(""))
+                {
+                    content = i++ + ";" + makale.getSira() + ";" + content.trim() + "\n";
+                    writer.write(content);
+                }
+            }
+            writer.close();
         }
         catch (IOException e)
         {
